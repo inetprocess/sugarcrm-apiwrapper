@@ -38,6 +38,14 @@ class SugarClient extends AbstractRequest
         $this->token = $body['access_token'];
     }
  
+    public function post($url, array $data, $expectedStatus = 201)
+    {
+        if (empty($this->token)) {
+            $this->login();
+        }
+        $this->request($url, $data, 'post', $expectedStatus);
+    }
+     
     public function getToken()
     {
         return $this->token;

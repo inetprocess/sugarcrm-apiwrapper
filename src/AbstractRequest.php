@@ -15,12 +15,7 @@ abstract class AbstractRequest
         $this->normalizeUrl($baseUrl, $version);
         $this->client = new Client();
     }
-        
-    public function post($url, array $data, $expectedStatus = 201)
-    {
-        $this->request($url, $data, 'post', $expectedStatus);
-    }
-    
+
     protected function request($url, array $data, $method = 'get', $expectedStatus = 201)
     {
         $headers = [];
