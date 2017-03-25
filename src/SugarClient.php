@@ -22,7 +22,7 @@ class SugarClient extends AbstractRequest
 
     public function login()
     {
-        $body = $this->request('oauth2/token', [
+        $body = $this->request('oauth2/token', [], [
             'grant_type' => 'password',
             'client_id' => 'sugar',
             'client_secret' => '',
@@ -43,10 +43,23 @@ class SugarClient extends AbstractRequest
         if (empty($this->token)) {
             $this->login();
         }
-        $data = array_merge(['oauth-token' => $this->token], $data);
-        $this->request($url, $data, 'post', $expectedStatus);
+
+        $headers = ['OAuth-Token' => $this->token];
+        
+        return $this->request($url, $headers, $data, 'post', $expectedStatus);
     }
-     
+
+    public function get($url, $expectedStatus = 200)
+    {
+        if (empty($this->token)) {
+            $this->login();
+        }
+
+        $headers = ['OAuth-Token' => $this->token];
+
+        return $this->request($url, $headers, [], 'get', $expectedStatus);
+    }
+    
     public function getToken()
     {
         return $this->token;
