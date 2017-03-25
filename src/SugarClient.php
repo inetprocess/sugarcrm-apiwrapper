@@ -17,7 +17,7 @@ class SugarClient extends AbstractRequest
     public function setUsername($username)
     {
         $this->username = $username;
-        
+
         return $this;
     }
 
@@ -27,14 +27,14 @@ class SugarClient extends AbstractRequest
 
         return $this;
     }
-    
+
     public function setPlatform($platform)
     {
         $this->platform = $platform;
 
         return $this;
-    }    
-    
+    }
+
     public function login()
     {
         Assert::stringNotEmpty($this->username, 'You must call setUsername() or setToken() before doing any action');
@@ -54,7 +54,7 @@ class SugarClient extends AbstractRequest
 
         $this->token = $body['access_token'];
     }
- 
+
     public function post($url, array $data, $expectedStatus = 201)
     {
         if (empty($this->token)) {
@@ -62,8 +62,23 @@ class SugarClient extends AbstractRequest
         }
 
         $headers = ['OAuth-Token' => $this->token];
-        
+
         return $this->request($url, $headers, $data, 'post', $expectedStatus);
+    }
+
+    public function put($url, array $data, $expectedStatus = 200)
+    {
+        if (empty($data['id'])) {
+            throw new \InvalidArgumentException('You need to have an ID to update a record');
+        }
+
+        if (empty($this->token)) {
+            $this->login();
+        }
+
+        $headers = ['OAuth-Token' => $this->token];
+
+        return $this->request($url . '/' . $data['id'], $headers, $data, 'put', $expectedStatus);
     }
 
     public function get($url, $expectedStatus = 200)
@@ -76,15 +91,14 @@ class SugarClient extends AbstractRequest
 
         return $this->request($url, $headers, [], 'get', $expectedStatus);
     }
-    
+
     public function getToken()
     {
         return $this->token;
     }
-    
+
     public function setToken($token)
     {
         $this->token = $token;
     }
 }
-
