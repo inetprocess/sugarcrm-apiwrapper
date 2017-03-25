@@ -43,6 +43,7 @@ class SugarClient extends AbstractRequest
         if (empty($this->token)) {
             $this->login();
         }
+        $data = array_merge(['oauth-token' => $this->token], $data);
         $this->request($url, $data, 'post', $expectedStatus);
     }
      
