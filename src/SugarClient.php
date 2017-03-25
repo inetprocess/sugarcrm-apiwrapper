@@ -2,6 +2,8 @@
 
 namespace InetProcess\SugarAPI;
 
+use Webmozart\Assert\Assert;
+
 class SugarClient extends AbstractRequest
 {
     /**
@@ -9,19 +11,34 @@ class SugarClient extends AbstractRequest
      */
     protected $username;
     protected $password;
-    protected $platform;
+    protected $platform = 'inetprocess';
     protected $token;
 
-    public function __construct($baseUrl, $username, $password, $platform = 'inetprocess', $version = '10')
+    public function setUsername($username)
     {
-        parent::__construct($baseUrl, $version);
         $this->username = $username;
-        $this->password = $password;
-        $this->platform = $platform;
+        
+        return $this;
     }
 
+    public function setPassword($password)
+    {
+        $this->password = $password;
+
+        return $this;
+    }
+    
+    public function setPlatform($platform)
+    {
+        $this->platform = $platform;
+
+        return $this;
+    }    
+    
     public function login()
     {
+        Assert::stringNotEmpty($this->username, 'You must call setUsername() or setToken() before doing any action');
+        Assert::stringNotEmpty($this->password, 'You must call setPassword() or setToken() before doing any action');
         $body = $this->request('oauth2/token', [], [
             'grant_type' => 'password',
             'client_id' => 'sugar',

@@ -3,6 +3,7 @@
 namespace InetProcess\SugarAPI;
 
 use GuzzleHttp\Client;
+use Webmozart\Assert\Assert;
 
 abstract class AbstractRequest
 {
@@ -10,8 +11,9 @@ abstract class AbstractRequest
     
     protected $client;
     
-    public function __construct($baseUrl, $version, $verify = false)
+    public function __construct($baseUrl, $version = 'v10', $verify = false)
     {
+        Assert::boolean($verify, 'Verify must be a boolean');
         $this->normalizeUrl($baseUrl, $version);
         $this->client = new Client(['verify' => $verify]);
     }
@@ -56,7 +58,7 @@ abstract class AbstractRequest
         }
         // remove everything after /rest/v10
         $this->baseUrl = preg_replace('|^(https?://.+)(/rest/v.*)$|', '$1', $url);
-        $this->baseUrl.= '/rest/v' . $version;
+        $this->baseUrl.= '/rest/' . $version;
     }
 
 
