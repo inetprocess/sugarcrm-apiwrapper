@@ -4,7 +4,7 @@ namespace InetProcess\SugarAPI;
 
 use Webmozart\Assert\Assert;
 
-class ModuleClient
+class Module
 {
     protected $sugarcrm;
 
@@ -15,14 +15,14 @@ class ModuleClient
 
     public function create($module, array $data)
     {
-        Assert::false(strpos($module, '/') || strpos($module, '?'), "$module is not a valid id");
+        Assert::false(strpos($module, '/') || strpos($module, '?'), "$module is not a valid module");
 
         return $this->sugarcrm->post($module, $data);
     }
 
     public function update($module, $id, array $data)
     {
-        Assert::false(strpos($module, '/') || strpos($module, '?'), "$module is not a valid id");
+        Assert::false(strpos($module, '/') || strpos($module, '?'), "$module is not a valid module");
         Assert::false(strpos($id, '/') || strpos($id, '?'), "$id is not a valid id");
 
         return $this->sugarcrm->put("{$module}/{$id}", $data);
@@ -30,7 +30,7 @@ class ModuleClient
 
     public function retrieve($module, $id)
     {
-        Assert::false(strpos($module, '/') || strpos($module, '?'), "$module is not a valid id");
+        Assert::false(strpos($module, '/') || strpos($module, '?'), "$module is not a valid module");
         Assert::false(strpos($id, '/') || strpos($id, '?'), "$id is not a valid id");
 
         return $this->sugarcrm->get($module, $id);
@@ -38,7 +38,7 @@ class ModuleClient
 
     public function delete($module, $id)
     {
-        Assert::false(strpos($module, '/') || strpos($module, '?'), "$module is not a valid id");
+        Assert::false(strpos($module, '/') || strpos($module, '?'), "$module is not a valid module");
         Assert::false(strpos($id, '/') || strpos($id, '?'), "$id is not a valid id");
 
         return $this->sugarcrm->delete($module, $id);
