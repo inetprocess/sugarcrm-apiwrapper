@@ -57,39 +57,17 @@ class SugarClient extends AbstractRequest
 
     public function post($url, array $data, $expectedStatus = 201)
     {
-        if (empty($this->token)) {
-            $this->login();
-        }
-
-        $headers = ['OAuth-Token' => $this->token];
-
-        return $this->request($url, $headers, $data, 'post', $expectedStatus);
+        return $this->baseRequest('post', $url, $data, $expectedStatus);
     }
 
     public function put($url, array $data, $expectedStatus = 200)
     {
-        if (empty($data['id'])) {
-            throw new \InvalidArgumentException('You need to have an ID to update a record');
-        }
-
-        if (empty($this->token)) {
-            $this->login();
-        }
-
-        $headers = ['OAuth-Token' => $this->token];
-
-        return $this->request($url . '/' . $data['id'], $headers, $data, 'put', $expectedStatus);
+        return $this->baseRequest('put', $url, $data, $expectedStatus);
     }
 
     public function get($url, $expectedStatus = 200)
     {
-        if (empty($this->token)) {
-            $this->login();
-        }
-
-        $headers = ['OAuth-Token' => $this->token];
-
-        return $this->request($url, $headers, [], 'get', $expectedStatus);
+        return $this->baseRequest('get', $url, [], $expectedStatus);
     }
 
     public function getToken()
@@ -100,5 +78,18 @@ class SugarClient extends AbstractRequest
     public function setToken($token)
     {
         $this->token = $token;
+    }
+
+    private function baseRequest($method, $url, array $data = [], $expectedStatus)
+    {
+        Assert::oneOf($method, ['get', 'post', 'put'], 'You can only post, put or get');
+
+        if (empty($this->token)) {
+            $this->login();
+        }
+
+        $headers = ['OAuth-Token' => $this->token];
+
+        return $this->request($url, $headers, $data, $method, $expectedStatus);
     }
 }
