@@ -8,9 +8,9 @@ use Webmozart\Assert\Assert;
 abstract class AbstractRequest
 {
     protected $baseUrl;
-    
+
     protected $client;
-    
+
     public function __construct($baseUrl, $version = 'v10', $verify = false)
     {
         Assert::boolean($verify, 'Verify must be a boolean');
@@ -26,10 +26,13 @@ abstract class AbstractRequest
             $options['headers']['Content-Type'] = 'application/json';
             $options['body'] = json_encode($data);
         }
-        
+
         try {
             $response = $this->client->request(strtoupper($method), $url, $options);
         } catch (\Exception $e) {
+            if ($e->getCode() === 404) {
+                throw new Exception\SugarAPIException("404 Error: Endpoint not found");
+            }
             throw new Exception\SugarAPIException('Request Error: ' . $e->getMessage());
         }
 
@@ -50,7 +53,7 @@ abstract class AbstractRequest
 
         return $data;
     }
- 
+
     protected function normalizeUrl($url, $version)
     {
         if (strpos($url, 'http') === false) {
