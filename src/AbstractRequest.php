@@ -30,8 +30,12 @@ abstract class AbstractRequest
         try {
             $response = $this->client->request(strtoupper($method), $url, $options);
         } catch (\Exception $e) {
-            if ($e->getCode() === 404) {
-                throw new Exception\SugarAPIException("404 Error: Endpoint not found");
+            if (strpos($e->getMessage(), 'Could not resolve host') !== false) {
+                throw new Exception\SugarAPIException('Wrong SugarCRM URL');
+            } elseif ($e->getCode() === 404) {
+                throw new Exception\SugarAPIException('404 Error: SugarCRM Endpoint not found', 404);
+            } elseif ($e->getCode() === 500) {
+                throw new Exception\SugarAPIException('SugarCRM Server Error', 500);
             }
             throw new Exception\SugarAPIException('Request Error: ' . $e->getMessage());
         }
@@ -39,6 +43,7 @@ abstract class AbstractRequest
         if ($expected !== $response->getStatusCode()) {
             throw new Exception\SugarAPIException(
                 'Bad status, got ' . $response->getStatusCode() . PHP_EOL .
+                'Instead of ' . $expected . PHP_EOL .
                 'Reponse: ' . $response->getReasonPhrase()
             );
         }

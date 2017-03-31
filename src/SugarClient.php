@@ -70,6 +70,11 @@ class SugarClient extends AbstractRequest
         return $this->baseRequest('get', $url, [], $expectedStatus);
     }
 
+    public function delete($url, $expectedStatus = 204)
+    {
+        return $this->baseRequest('delete', $url, [], $expectedStatus);
+    }
+
     public function getToken()
     {
         return $this->token;
@@ -82,7 +87,7 @@ class SugarClient extends AbstractRequest
 
     private function baseRequest($method, $url, array $data = [], $expectedStatus)
     {
-        Assert::oneOf($method, ['get', 'post', 'put'], 'You can only post, put or get');
+        Assert::oneOf($method, ['get', 'post', 'put', 'delete'], 'You can only post, put or get');
 
         if (empty($this->token)) {
             $this->login();
