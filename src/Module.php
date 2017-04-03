@@ -36,13 +36,16 @@ class Module
         }
     }
 
-    public function retrieve($module, $id)
+    public function retrieve($module, $id = null)
     {
         Assert::false(strpos($module, '/') || strpos($module, '?'), "$module is not a valid module");
-        Assert::false(strpos($id, '/') || strpos($id, '?'), "$id is not a valid id");
+        if (!is_null($id)) {
+            Assert::false(strpos($id, '/') || strpos($id, '?'), "$id is not a valid id");
+            $id = '/' . $id;
+        }
 
         try {
-            return $this->sugarcrm->get($module . '/' . $id);
+            return $this->sugarcrm->get($module . $id);
         } catch (\Exception $e) {
             $this->handleSugarError($e, $module, $id);
         }
