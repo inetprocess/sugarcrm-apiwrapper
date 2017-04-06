@@ -51,6 +51,17 @@ class Module
         }
     }
 
+    public function search($module, array $filters, $offset)
+    {
+        Assert::false(strpos($module, '/') || strpos($module, '?'), "$module is not a valid module");
+
+        try {
+            return $this->sugarcrm->get($module . $id . '?filter=' . http_build_query($filters));
+        } catch (\Exception $e) {
+            $this->handleSugarError($e, $module, $id);
+        }
+    }
+
     public function delete($module, $id)
     {
         Assert::false(strpos($module, '/') || strpos($module, '?'), "$module is not a valid module");
