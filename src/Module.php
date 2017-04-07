@@ -51,12 +51,20 @@ class Module
         }
     }
 
-    public function search($module, array $filters, $offset)
+    public function search($module, array $filters, $fields = [], $offset = 0, $maxNum = 20, $orderBy = null)
     {
         Assert::false(strpos($module, '/') || strpos($module, '?'), "$module is not a valid module");
 
+        $body = ['filter' => $filters, 'max_num' => $maxNum, 'offset' => $offset];
+        if (!empty($fields)) {
+            $body['fields'] = $fields;
+        }
+        if (!empty($orderBy)) {
+            $body['order_by'] = $orderBy;
+        }
+
         try {
-            return $this->sugarcrm->get($module . $id . '?filter=' . http_build_query($filters));
+            return $this->sugarcrm->post($module . '/filter', $body, 200);
         } catch (\Exception $e) {
             $this->handleSugarError($e, $module, $id);
         }
