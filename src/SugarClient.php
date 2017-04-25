@@ -13,6 +13,7 @@ class SugarClient extends AbstractRequest
     protected $password;
     protected $platform = 'inetprocess';
     protected $token;
+    protected $tokenExpiration;
 
     public function setUsername($username)
     {
@@ -53,6 +54,7 @@ class SugarClient extends AbstractRequest
         }
 
         $this->token = $body['access_token'];
+        $this->tokenExpiration = new \DateTime("+{$body['expires_in']} seconds");
     }
 
     public function post($url, array $data, $expectedStatus = 201)
@@ -78,6 +80,11 @@ class SugarClient extends AbstractRequest
     public function getToken()
     {
         return $this->token;
+    }
+
+    public function getTokenExpiration()
+    {
+        return $this->tokenExpiration;
     }
 
     public function setToken($token)

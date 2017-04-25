@@ -51,7 +51,7 @@ class Module
         }
     }
 
-    public function search($module, array $filters, $fields = [], $offset = 0, $maxNum = 20, $orderBy = null)
+    public function search($module, array $filters, array $fields = [], $offset = 0, $maxNum = 20, $orderBy = null)
     {
         Assert::false(strpos($module, '/') || strpos($module, '?'), "$module is not a valid module");
 
