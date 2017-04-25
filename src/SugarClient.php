@@ -96,7 +96,8 @@ class SugarClient extends AbstractRequest
     {
         Assert::oneOf($method, ['get', 'post', 'put', 'delete'], 'You can only post, put or get');
 
-        if (empty($this->token)) {
+        $now = new \DateTime;
+        if (empty($this->token) || $this->tokenExpiration < $now) {
             $this->login();
         }
 
