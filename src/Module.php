@@ -66,7 +66,7 @@ class Module
         try {
             return $this->sugarcrm->post($module . '/filter', $body, 200);
         } catch (\Exception $e) {
-            $this->handleSugarError($e, $module, $id);
+            $this->handleSugarError($e, $module);
         }
     }
 
@@ -82,12 +82,12 @@ class Module
         }
     }
 
-    private function handleSugarError(\Exception $e, $module, $id = null)
+    private function handleSugarError(\Exception $exception, $module, $id = null)
     {
-        if ($e->getCode() === 404) {
+        if ($exception->getCode() === 404) {
             throw new Exception\SugarAPIException("Module $module " . (is_null($id) ? '' : "or id $id ") . 'not found');
         }
 
-        throw $e;
+        throw $exception;
     }
 }
