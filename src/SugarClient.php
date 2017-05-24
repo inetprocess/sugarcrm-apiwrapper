@@ -64,6 +64,12 @@ class SugarClient extends AbstractRequest
 
     public function put($url, array $data, $expectedStatus = 200)
     {
+        foreach ($data as $field => $value) {
+            if (is_null($value)) {
+                $data[$field] = '';
+            }
+        }
+
         return $this->baseRequest('put', $url, $data, $expectedStatus);
     }
 
