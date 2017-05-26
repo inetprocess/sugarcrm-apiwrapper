@@ -76,7 +76,12 @@ class Module
 
         $filters = !empty($filters) ? '?' . http_build_query(['filter' => $filters]) : '';
         try {
-            return $this->sugarcrm->get($module . '/count' . $filters, 200);
+            $res = $this->sugarcrm->get($module . '/count' . $filters, 200);
+            if (!array_key_exists('record_count', $res)) {
+                throw new SugarAPIException("Can't get a record_count key during a GET /{module}/count");
+            }
+
+            return $res['record_count'];
         } catch (\Exception $e) {
             $this->handleSugarError($e, $module);
         }
