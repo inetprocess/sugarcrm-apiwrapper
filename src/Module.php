@@ -81,7 +81,7 @@ class Module
                 throw new SugarAPIException("Can't get a record_count key during a GET /{module}/count");
             }
 
-            return $res['record_count'];
+            return (int)$res['record_count'];
         } catch (\Exception $e) {
             $this->handleSugarError($e, $module);
         }
