@@ -70,6 +70,18 @@ class Module
         }
     }
 
+    public function count($module, array $filters)
+    {
+        Assert::false(strpos($module, '/') || strpos($module, '?'), "$module is not a valid module");
+
+        $filters = !empty($filters) ? '?' . http_build_query(['filter' => $filters]) : '';
+        try {
+            return $this->sugarcrm->get($module . '/count' . $filters, 200);
+        } catch (\Exception $e) {
+            $this->handleSugarError($e, $module);
+        }
+    }
+
     public function delete($module, $id)
     {
         Assert::false(strpos($module, '/') || strpos($module, '?'), "$module is not a valid module");
