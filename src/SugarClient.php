@@ -59,7 +59,7 @@ class SugarClient extends AbstractRequest
 
     public function post($url, array $data, $expectedStatus = 201)
     {
-        return $this->baseRequest('post', $url, $data, $expectedStatus);
+        return $this->baseRequest('post', $url, $expectedStatus, $data);
     }
 
     public function put($url, array $data, $expectedStatus = 200)
@@ -70,17 +70,17 @@ class SugarClient extends AbstractRequest
             }
         }
 
-        return $this->baseRequest('put', $url, $data, $expectedStatus);
+        return $this->baseRequest('put', $url, $expectedStatus, $data);
     }
 
     public function get($url, $expectedStatus = 200)
     {
-        return $this->baseRequest('get', $url, [], $expectedStatus);
+        return $this->baseRequest('get', $url, $expectedStatus);
     }
 
     public function delete($url, $expectedStatus = 204)
     {
-        return $this->baseRequest('delete', $url, [], $expectedStatus);
+        return $this->baseRequest('delete', $url, $expectedStatus);
     }
 
     public function getToken()
@@ -98,7 +98,7 @@ class SugarClient extends AbstractRequest
         $this->token = $token;
     }
 
-    private function baseRequest($method, $url, array $data = [], $expectedStatus)
+    public function baseRequest($method, $url, $expectedStatus = 200, array $data = [], array $headers = [])
     {
         Assert::oneOf($method, ['get', 'post', 'put', 'delete'], 'You can only post, put or get');
 
@@ -107,7 +107,7 @@ class SugarClient extends AbstractRequest
             $this->login();
         }
 
-        $headers = ['OAuth-Token' => $this->token];
+        $headers = array_merge(['OAuth-Token' => $this->token], $headers);
 
         return $this->request($url, $headers, $data, $method, $expectedStatus);
     }

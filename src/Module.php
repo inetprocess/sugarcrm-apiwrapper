@@ -99,6 +99,25 @@ class Module
         }
     }
 
+    public function upload($module, $id, $field, $filePath, $originalName)
+    {
+        Assert::false(strpos($module, '/') || strpos($module, '?'), "$module is not a valid module");
+        Assert::false(strpos($id, '/') || strpos($id, '?'), "$id is not a valid id");
+
+        $url = "{$module}/{$id}/file/{$field}";
+        $data = [
+            'field' => $field,
+            'filename' => $originalName,
+            'contents' => file_get_contents($filePath),
+        ];
+
+        try {
+            return $this->sugarcrm->post($url, $data, 200);
+        } catch (\Exception $e) {
+            $this->handleSugarError($e, $module);
+        }
+    }
+
     private function handleSugarError(\Exception $exception, $module, $id = null)
     {
         if ($exception->getCode() === 404) {

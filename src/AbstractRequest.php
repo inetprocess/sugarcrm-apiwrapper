@@ -22,7 +22,15 @@ abstract class AbstractRequest
     {
         $url = $this->baseUrl . '/' . ltrim($url, '/');
         $options = ['headers' => $headers];
-        if (!empty($data)) {
+
+        // trying to send a file
+        if (!empty($data['filename'])) {
+            Assert::keyExists($data, 'field', "You must set the field name as 'field' key to upload");
+            Assert::keyExists($data, 'contents', "You must set the contents as 'contents' key to upload");
+            $options['multipart'] = [
+                ['name'     => $data['field'], 'contents' => $data['contents'], 'filename' => $data['filename']],
+            ];
+        } elseif (!empty($data)) {
             $options['headers']['Content-Type'] = 'application/json';
             $options['body'] = json_encode($data);
         }
