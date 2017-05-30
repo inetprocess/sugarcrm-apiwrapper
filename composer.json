@@ -11,8 +11,9 @@
     ],
     "require": {
         "php": ">=5.6",
-        "guzzlehttp/guzzle": "@stable",
-        "webmozart/assert": "^1.2"
+        "guzzlehttp/guzzle": "^6",
+        "webmozart/assert": "^1.2",
+        "psr/log": "@stable"
     },
     "require-dev": {
         "phpunit/phpunit": "@stable"

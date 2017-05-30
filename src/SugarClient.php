@@ -40,6 +40,9 @@ class SugarClient extends AbstractRequest
     {
         Assert::stringNotEmpty($this->username, 'You must call setUsername() or setToken() before doing any action');
         Assert::stringNotEmpty($this->password, 'You must call setPassword() or setToken() before doing any action');
+
+        $this->logger->debug('SugarAPIWrapper Client: Login');
+
         $body = $this->request('oauth2/token', [], [
             'grant_type' => 'password',
             'client_id' => 'sugar',
@@ -55,6 +58,9 @@ class SugarClient extends AbstractRequest
 
         $this->token = $body['access_token'];
         $this->tokenExpiration = new \DateTime("+{$body['expires_in']} seconds");
+
+        $this->logger->debug('SugarAPIWrapper Client: Token is ' . $this->token);
+        $this->logger->debug('SugarAPIWrapper Client: Expiration is ' . $this->tokenExpiration->format('Y-m-d H:i:s'));
     }
 
     public function post($url, array $data, $expectedStatus = 201)
@@ -88,14 +94,23 @@ class SugarClient extends AbstractRequest
         return $this->token;
     }
 
+    public function setToken($token)
+    {
+        $this->token = $token;
+
+        return $this;
+    }
+
     public function getTokenExpiration()
     {
         return $this->tokenExpiration;
     }
 
-    public function setToken($token)
+    public function setTokenExpiration(\DateTime $tokenExpiration)
     {
-        $this->token = $token;
+        $this->tokenExpiration = $tokenExpiration;
+
+        return $this;
     }
 
     public function baseRequest($method, $url, $expectedStatus = 200, array $data = [], array $headers = [])
@@ -104,6 +119,7 @@ class SugarClient extends AbstractRequest
 
         $now = new \DateTime;
         if (empty($this->token) || $this->tokenExpiration < $now) {
+            $this->logger->debug('SugarAPIWrapper Client: Token ' . empty($this->token) ? 'Empty' : 'Expired');
             $this->login();
         }
 
