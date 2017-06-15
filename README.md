@@ -1,5 +1,10 @@
 # SugarCRM Api Wrapper
 
+# Install
+```bash
+composer require inetprocess/sugarcrm-apiwrapper
+```
+
 # Usage
 ## BaseRequest
 A basic class that initiate the Guzzle HTTP Client and provides the main methods for other class to do
