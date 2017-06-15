@@ -14,6 +14,8 @@ SugarCRM API Calls. You can use it directly but it's not recommanded. You can al
 ```php
 <?php
 
+require_once 'vendor/autoload.php';
+
 use InetProcess\SugarAPI\BaseRequest;
 
 $url = 'http://127.0.0.1';
@@ -49,6 +51,8 @@ An extension of `BaseRequest` with wrappers for GET, POST, PUT and DELETE. It do
 ### Init the client
 ```php
 <?php
+
+require_once 'vendor/autoload.php';
 
 use InetProcess\SugarAPI\SugarClient;
 
@@ -100,6 +104,9 @@ Wrappers for specific modules actions. It does an autologin and sends the right 
 ### Init the client and the module classes
 ```php
 <?php
+
+require_once 'vendor/autoload.php';
+
 use InetProcess\SugarAPI\Module;
 use InetProcess\SugarAPI\SugarClient;
 
@@ -261,6 +268,12 @@ Parameters:
 
 ```php
 <?php
+
+require_once 'vendor/autoload.php';
+
+use InetProcess\SugarAPI\Dropdown;
+use InetProcess\SugarAPI\SugarClient;
+
 $url = 'http://127.0.0.1';
 $username = 'admin';
 $password = 'admin';
