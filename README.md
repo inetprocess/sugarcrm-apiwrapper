@@ -73,15 +73,6 @@ $contact = $client->post('/Contacts', $data);
 echo $contact['last_name']; // Should display: "D."
 ```
 
-### GET To Any Endpoint
-```php
-<?php
-$contact = $client->get('/Contacts/' . $contact['id']);
-
-echo $contact['last_name']; // Should display: "D."
-```
-
-
 ### PUT To any Endpoint
 After doing the POST, do the following:
 ```php
@@ -92,11 +83,20 @@ $contact = $client->put('/Contacts/' . $contact['id'], $data);
 echo $contact['last_name']; // Should display: "Dy"
 ```
 
+### GET To any Endpoint
+```php
+<?php
+$contact = $client->get('/Contacts/' . $contact['id']);
+
+echo $contact['last_name']; // Should display: "D."
+```
+
 ### DELETE To any Endpoint
 ```php
 <?php
 $contact = $client->delete('/Contacts/' . $contact['id']);
 ```
+
 
 ## Module
 Wrappers for specific modules actions. It does an autologin and sends the right headers with the tokens automatically.
@@ -260,7 +260,7 @@ echo $uploadedFile['filename']['name']; // Displays "My File.txt"
 
 
 ## Dropdown
-Retrieves the values of a dropdown
+Retrieves the keys / values of a dropdown, in the current user (the one defined in setUserName) language.
 
 Parameters:
 * `$module` : Module Name such as _Contacts_
