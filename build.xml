@@ -29,7 +29,7 @@
 * @package    sugarcrm-apiwrapper${NEWLINE}
 * @author     Emmanuel Dyan${NEWLINE}
 * @copyright  2005-2017 iNet Process${NEWLINE}
-* @version    1.0-beta1${NEWLINE}
+* @version    1.0.2 ${NEWLINE}
 * @link       http://www.inetprocess.com${NEWLINE}
 */${NEWLINE}${NEWLINE}namespace InetProcess" />
                 </replaceregexp>
