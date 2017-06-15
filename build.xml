@@ -114,5 +114,8 @@
             <include name="**/*.php"/>
           </fileset>
         </phplint>
+
+        <!-- As we use a docker image, force the right uid / gid at the end on the report directory -->
+        <chmod file="report" mode="0777" />
   </target>
 </project>
