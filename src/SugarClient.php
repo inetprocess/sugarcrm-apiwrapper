@@ -1,73 +1,57 @@
 <?php
+/**
+ * An API Wrapper made in PHP 5.6 for SugarCRM 7.x
+ *
+ * @version    1.0-beta1
+ * @package    sugarcrm-apiwrapper
+ *
+ * @author     Emmanuel Dyan
+ * @copyright  2005-2017 iNet Process
+ *
+ * @link       http://www.inetprocess.com
+ */
 
 namespace InetProcess\SugarAPI;
 
-use Webmozart\Assert\Assert;
-
-class SugarClient extends AbstractRequest
+class SugarClient extends BaseRequest
 {
     /**
-     * @var Client
+     * @param  string $url
+     * @param  int $expectedStatus
+     * @return array
      */
-    protected $username;
-    protected $password;
-    protected $platform = 'inetprocess';
-    protected $token;
-    protected $tokenExpiration;
-
-    public function setUsername($username)
+    public function delete($url, $expectedStatus = 200)
     {
-        $this->username = $username;
-
-        return $this;
+        return $this->clientRequest('delete', $url, $expectedStatus);
     }
 
-    public function setPassword($password)
+    /**
+     * @param  string $url
+     * @param  int $expectedStatus
+     * @return array
+     */
+    public function get($url, $expectedStatus = 200, $rawBody = false)
     {
-        $this->password = $password;
-
-        return $this;
+        return $this->clientRequest('get', $url, $expectedStatus, [], [], $rawBody);
     }
 
-    public function setPlatform($platform)
+    /**
+     * @param  string $url
+     * @param  array             $data
+     * @param  int $expectedStatus
+     * @return array
+     */
+    public function post($url, array $data, $expectedStatus = 200)
     {
-        $this->platform = $platform;
-
-        return $this;
+        return $this->clientRequest('post', $url, $expectedStatus, $data);
     }
 
-    public function login()
-    {
-        Assert::stringNotEmpty($this->username, 'You must call setUsername() or setToken() before doing any action');
-        Assert::stringNotEmpty($this->password, 'You must call setPassword() or setToken() before doing any action');
-
-        $this->logger->debug('SugarAPIWrapper Client: Login');
-
-        $body = $this->request('oauth2/token', [], [
-            'grant_type' => 'password',
-            'client_id' => 'sugar',
-            'client_secret' => '',
-            'username' => $this->username,
-            'password' => $this->password,
-            'platform' => $this->platform,
-        ], 'post', 200);
-
-        if (empty($body['access_token'])) {
-            throw new Exception\SugarAPIException("No Token in the returned body");
-        }
-
-        $this->token = $body['access_token'];
-        $this->tokenExpiration = new \DateTime("+{$body['expires_in']} seconds");
-
-        $this->logger->debug('SugarAPIWrapper Client: Token is ' . $this->token);
-        $this->logger->debug('SugarAPIWrapper Client: Expiration is ' . $this->tokenExpiration->format('Y-m-d H:i:s'));
-    }
-
-    public function post($url, array $data, $expectedStatus = 201)
-    {
-        return $this->baseRequest('post', $url, $expectedStatus, $data);
-    }
-
+    /**
+     * @param  string $url
+     * @param  array             $data
+     * @param  int $expectedStatus
+     * @return array
+     */
     public function put($url, array $data, $expectedStatus = 200)
     {
         foreach ($data as $field => $value) {
@@ -76,47 +60,19 @@ class SugarClient extends AbstractRequest
             }
         }
 
-        return $this->baseRequest('put', $url, $expectedStatus, $data);
+        return $this->clientRequest('put', $url, $expectedStatus, $data);
     }
 
-    public function get($url, $expectedStatus = 200)
+    /**
+     * @param  string  $method
+     * @param  string  $url
+     * @param  int     $expect
+     * @param  array   $data
+     * @param  array   $headers
+     * @return array
+     */
+    private function clientRequest($method, $url, $expect = 200, array $data = [], array $headers = [], $raw = false)
     {
-        return $this->baseRequest('get', $url, $expectedStatus);
-    }
-
-    public function delete($url, $expectedStatus = 204)
-    {
-        return $this->baseRequest('delete', $url, $expectedStatus);
-    }
-
-    public function getToken()
-    {
-        return $this->token;
-    }
-
-    public function setToken($token)
-    {
-        $this->token = $token;
-
-        return $this;
-    }
-
-    public function getTokenExpiration()
-    {
-        return $this->tokenExpiration;
-    }
-
-    public function setTokenExpiration(\DateTime $tokenExpiration)
-    {
-        $this->tokenExpiration = $tokenExpiration;
-
-        return $this;
-    }
-
-    public function baseRequest($method, $url, $expectedStatus = 200, array $data = [], array $headers = [])
-    {
-        Assert::oneOf($method, ['get', 'post', 'put', 'delete'], 'You can only post, put or get');
-
         $now = new \DateTime;
         if (empty($this->token) || $this->tokenExpiration < $now) {
             $this->logger->debug('SugarAPIWrapper Client: Token ' . empty($this->token) ? 'Empty' : 'Expired');
@@ -125,6 +81,6 @@ class SugarClient extends AbstractRequest
 
         $headers = array_merge(['OAuth-Token' => $this->token], $headers);
 
-        return $this->request($url, $headers, $data, $method, $expectedStatus);
+        return $this->request($url, $headers, $data, $method, $expect, $raw);
     }
 }

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<phpunit
+    bootstrap="vendor/autoload.php"
+    backupGlobals="false"
+    backupStaticAttributes="false"
+    colors="true"
+    convertErrorsToExceptions="true"
+    convertNoticesToExceptions="false"
+    convertWarningsToExceptions="true"
+    processIsolation="false"
+    stopOnError="true"
+    stopOnFailure="true"
+    syntaxCheck="true"
+    >
+    <testsuites>
+        <testsuite name="SugarCRM API Wrapper Tests">
+            <directory>tests</directory>
+        </testsuite>
+    </testsuites>
+    <filter>
+        <whitelist>
+            <directory suffix=".php">src</directory>
+        </whitelist>
+    </filter>
+    <logging>
+        <log type="coverage-html" target="report/phpunit" lowUpperBound="35" highLowerBound="70"/>
+        <log type="coverage-text" target="php://stdout" showUncoveredFiles="false" showOnlySummary="true"/>
+    </logging>
+    <php>
+        <env name='SUGARCRM_URL' value='http://127.0.0.1' />
+        <env name='SUGARCRM_USER' value='admin' />
+        <env name='SUGARCRM_PASSWORD' value='admin' />
+    </php>
+</phpunit>

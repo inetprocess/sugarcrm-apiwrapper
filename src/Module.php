@@ -1,4 +1,15 @@
 <?php
+/**
+ * An API Wrapper made in PHP 5.6 for SugarCRM 7.x
+ *
+ * @version    1.0-beta1
+ * @package    sugarcrm-apiwrapper
+ *
+ * @author     Emmanuel Dyan
+ * @copyright  2005-2017 iNet Process
+ *
+ * @link       http://www.inetprocess.com
+ */
 
 namespace InetProcess\SugarAPI;
 
@@ -6,51 +17,145 @@ use Webmozart\Assert\Assert;
 
 class Module
 {
-    protected $sugarcrm;
+    /**
+     * @var SugarClient
+     */
+    protected $sugarClient;
 
-    public function __construct(SugarClient $sugarcrm)
+    /**
+     * @param SugarClient $sugarClient
+     */
+    public function __construct(SugarClient $sugarClient)
     {
-        $this->sugarcrm = $sugarcrm;
+        $this->sugarClient = $sugarClient;
     }
 
-    public function create($module, array $data)
+    /**
+     * @param  string $module
+     * @param  array  $filters
+     * @return int
+     */
+    public function count($module, array $filters)
     {
         Assert::false(strpos($module, '/') || strpos($module, '?'), "$module is not a valid module");
 
+        $filters = !empty($filters) ? '?' . http_build_query(['filter' => $filters]) : '';
         try {
-            return $this->sugarcrm->post($module, $data, 200);
+            $res = $this->sugarClient->get($module . '/count' . $filters, 200);
+            if (!array_key_exists('record_count', $res)) {
+                throw new SugarAPIException("Can't get a record_count key during a GET /{module}/count");
+            }
+
+            $total = (int) $res['record_count'];
         } catch (\Exception $e) {
             $this->handleSugarError($e, $module);
         }
+
+        return $total;
     }
 
-    public function update($module, $id, array $data)
+    /**
+     * @param  string  $module
+     * @param  array   $data
+     * @return array
+     */
+    public function create($module, array $data)
     {
         Assert::false(strpos($module, '/') || strpos($module, '?'), "$module is not a valid module");
-        Assert::false(strpos($id, '/') || strpos($id, '?'), "$id is not a valid id");
+        Assert::notEmpty($data, "Data can't be empty");
 
         try {
-            return $this->sugarcrm->put("{$module}/{$id}", $data);
+            $data = $this->sugarClient->post($module, $data, 200);
         } catch (\Exception $e) {
-            $this->handleSugarError($e, $module, $id);
+            $this->handleSugarError($e, $module);
         }
+
+        return $data;
     }
 
-    public function retrieve($module, $id = null)
+    /**
+     * @param  string  $module
+     * @param  string  $record
+     * @return array
+     */
+    public function delete($module, $record)
     {
         Assert::false(strpos($module, '/') || strpos($module, '?'), "$module is not a valid module");
-        if (!is_null($id)) {
-            Assert::false(strpos($id, '/') || strpos($id, '?'), "$id is not a valid id");
-            $id = '/' . $id;
+        Assert::false(strpos($record, '/') || strpos($record, '?'), "$record is not a valid id");
+        Assert::notEmpty($record, "Record ID can't be empty");
+
+        try {
+            $data = $this->sugarClient->delete($module . '/' . $record, 200);
+        } catch (\Exception $e) {
+            $this->handleSugarError($e, $module, $record);
+        }
+
+        return $data;
+    }
+
+    /**
+     * @param  string  $module
+     * @param  string  $record
+     * @return array
+     */
+    public function download($module, $record, $field, $targetFile = null)
+    {
+        Assert::false(strpos($module, '/') || strpos($module, '?'), "$module is not a valid module");
+        Assert::false(strpos($record, '/') || strpos($record, '?'), "$record is not a valid id");
+        Assert::false(strpos($field, '/') || strpos($field, '?'), "$field is not a valid field");
+        Assert::notEmpty($record, "Record ID can't be empty");
+        Assert::notEmpty($field, "Field Name can't be empty");
+
+        $url = $module . '/' . $record . '/file/' . $field;
+
+        try {
+            $fileContent = $this->sugarClient->get($url, 200, true);
+        } catch (\Exception $e) {
+            $this->handleSugarError($e, $module, $record);
+        }
+
+        if (is_null($targetFile)) {
+            return $fileContent;
+        }
+
+        Assert::writable($targetFile, "$targetFile must be writeable");
+        file_put_contents($targetFile, $fileContent);
+    }
+
+
+    /**
+     * @param  string  $module
+     * @param  string  $record
+     * @return array
+     */
+    public function retrieve($module, $record = null, $offset = 0, $maxNum = 20)
+    {
+        Assert::false(strpos($module, '/') || strpos($module, '?'), "$module is not a valid module");
+
+        $url = $module . "?max_num={$maxNum}&offset={$offset}";
+        if (!is_null($record)) {
+            Assert::false(strpos($record, '/') || strpos($record, '?'), "$record is not a valid id");
+            $url = $module . '/' . $record;
         }
 
         try {
-            return $this->sugarcrm->get($module . $id);
+            $data = $this->sugarClient->get($url);
         } catch (\Exception $e) {
-            $this->handleSugarError($e, $module, $id);
+            $this->handleSugarError($e, $module, $record);
         }
+
+        return $data;
     }
 
+    /**
+     * @param  string  $module
+     * @param  array   $filters
+     * @param  array   $fields
+     * @param  int     $offset
+     * @param  int     $maxNum
+     * @param  string  $orderBy
+     * @return array
+     */
     public function search($module, array $filters, array $fields = [], $offset = 0, $maxNum = 20, $orderBy = null)
     {
         Assert::false(strpos($module, '/') || strpos($module, '?'), "$module is not a valid module");
@@ -64,47 +169,50 @@ class Module
         }
 
         try {
-            return $this->sugarcrm->post($module . '/filter', $body, 200);
+            $data = $this->sugarClient->post($module . '/filter', $body, 200);
         } catch (\Exception $e) {
             $this->handleSugarError($e, $module);
         }
+
+        return $data;
     }
 
-    public function count($module, array $filters)
+    /**
+     * @param  string  $module
+     * @param  string  $record
+     * @param  array   $data
+     * @return array
+     */
+    public function update($module, $record, array $data)
     {
         Assert::false(strpos($module, '/') || strpos($module, '?'), "$module is not a valid module");
-
-        $filters = !empty($filters) ? '?' . http_build_query(['filter' => $filters]) : '';
-        try {
-            $res = $this->sugarcrm->get($module . '/count' . $filters, 200);
-            if (!array_key_exists('record_count', $res)) {
-                throw new SugarAPIException("Can't get a record_count key during a GET /{module}/count");
-            }
-
-            return (int)$res['record_count'];
-        } catch (\Exception $e) {
-            $this->handleSugarError($e, $module);
-        }
-    }
-
-    public function delete($module, $id)
-    {
-        Assert::false(strpos($module, '/') || strpos($module, '?'), "$module is not a valid module");
-        Assert::false(strpos($id, '/') || strpos($id, '?'), "$id is not a valid id");
+        Assert::false(strpos($record, '/') || strpos($record, '?'), "$record is not a valid id");
+        Assert::notEmpty($record, "Record ID can't be empty");
+        Assert::notEmpty($data, "Data can't be empty");
 
         try {
-            return $this->sugarcrm->delete($module . '/' . $id, 200);
+            $data = $this->sugarClient->put("{$module}/{$record}", $data);
         } catch (\Exception $e) {
-            $this->handleSugarError($e, $module, $id);
+            $this->handleSugarError($e, $module, $record);
         }
+
+        return $data;
     }
 
-    public function upload($module, $id, $field, $filePath, $originalName)
+    /**
+     * @param  string  $module
+     * @param  string  $record
+     * @param  string  $field
+     * @param  string  $filePath
+     * @param  string  $originalName
+     * @return array
+     */
+    public function upload($module, $record, $field, $filePath, $originalName)
     {
         Assert::false(strpos($module, '/') || strpos($module, '?'), "$module is not a valid module");
-        Assert::false(strpos($id, '/') || strpos($id, '?'), "$id is not a valid id");
+        Assert::false(strpos($record, '/') || strpos($record, '?'), "$record is not a valid id");
 
-        $url = "{$module}/{$id}/file/{$field}";
+        $url = "{$module}/{$record}/file/{$field}";
         $data = [
             'field' => $field,
             'filename' => $originalName,
@@ -112,16 +220,28 @@ class Module
         ];
 
         try {
-            return $this->sugarcrm->post($url, $data, 200);
+            $data = $this->sugarClient->post($url, $data, 200);
         } catch (\Exception $e) {
             $this->handleSugarError($e, $module);
         }
+
+        return $data;
     }
 
-    private function handleSugarError(\Exception $exception, $module, $id = null)
+    /**
+     * @param \Exception $exception
+     * @param string     $module
+     * @param string     $record
+     */
+    private function handleSugarError(\Exception $exception, $module, $record = null)
     {
         if ($exception->getCode() === 404) {
-            throw new Exception\SugarAPIException("Module $module " . (is_null($id) ? '' : "or id $id ") . 'not found');
+            $module = ltrim($module, '/');
+            $record = ltrim($record, '/');
+
+            $idNotFound = empty($record) ? '' : " or id $record";
+
+            throw new Exception\SugarAPIException("Module $module" . $idNotFound . ' not found');
         }
 
         throw $exception;

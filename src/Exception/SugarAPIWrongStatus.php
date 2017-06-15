@@ -11,6 +11,6 @@
 
 namespace InetProcess\SugarAPI\Exception;
 
-class SugarAPIException extends \Exception
+class SugarAPIWrongStatus extends SugarAPIException
 {
 }

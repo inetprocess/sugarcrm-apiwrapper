@@ -1,4 +1,13 @@
 <?php
+/**
+ * An API Wrapper made in PHP 5.6 for SugarCRM 7.x
+ *
+ * @package    sugarcrm-apiwrapper
+ * @author     Emmanuel Dyan
+ * @copyright  2005-2017 iNet Process
+ * @version    1.0-beta1
+ * @link       http://www.inetprocess.com
+ */
 
 namespace InetProcess\SugarAPI;
 
@@ -6,18 +15,30 @@ use Webmozart\Assert\Assert;
 
 class Dropdown
 {
-    protected $sugarcrm;
+    /**
+     * @var SugarClient
+     */
+    protected $sugarClient;
 
-    public function __construct(SugarClient $sugarcrm)
+    /**
+     * @param SugarClient $sugarClient
+     */
+    public function __construct(SugarClient $sugarClient)
     {
-        $this->sugarcrm = $sugarcrm;
+        $this->sugarClient = $sugarClient;
     }
 
+    /**
+     * Get a Dropdown
+     * @param  string $module
+     * @param  string $field
+     * @return array
+     */
     public function getDropdown($module, $field)
     {
-        Assert::false(strpos($module, '/') || strpos($module, '?'), "$module is not a valid $module");
-        Assert::false(strpos($field, '/') || strpos($field, '?'), "$field is not a valid $field");
+        Assert::false(strpos($module, '/') || strpos($module, '?'), "$module is not a valid module");
+        Assert::false(strpos($field, '/') || strpos($field, '?'), "$field is not a valid field");
 
-        return $this->sugarcrm->get("{$module}/enum/{$field}");
+        return $this->sugarClient->get("{$module}/enum/{$field}");
     }
 }
