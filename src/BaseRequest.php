@@ -5,7 +5,7 @@
  * @package    sugarcrm-apiwrapper
  * @author     Emmanuel Dyan
  * @copyright  2005-2017 iNet Process
- * @version    1.0.2 
+ * @version    1.0.3 
  * @link       http://www.inetprocess.com
  */
 
@@ -189,7 +189,7 @@ class BaseRequest
         }
 
         $data = json_decode($response->getBody(), true);
-        if ($data === null) {
+        if (is_null($data) === null && !is_null($response->getBody())) {
             $msg = "Can't read the output. Status: " . $response->getStatusCode() . PHP_EOL;
             $msg .= "Raw Body: " . $response->getBody();
 
@@ -291,8 +291,7 @@ class BaseRequest
         $options = ['headers' => $headers];
 
         // trying to send a file
-        if (!empty($data['filename'])) {
-            Assert::keyExists($data, 'field', "You must set the field name as 'field' key to upload");
+        if (!empty($data['filename']) && !empty($data['field'])) {
             Assert::keyExists($data, 'contents', "You must set the contents as 'contents' key to upload");
             $options['multipart'] = [
                 ['name' => $data['field'], 'contents' => $data['contents'], 'filename' => $data['filename']],

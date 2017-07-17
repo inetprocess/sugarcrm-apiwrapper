@@ -5,7 +5,7 @@
  * @package    sugarcrm-apiwrapper
  * @author     Emmanuel Dyan
  * @copyright  2005-2017 iNet Process
- * @version    1.0.2 
+ * @version    1.0.3 
  * @link       http://www.inetprocess.com
  */
 
