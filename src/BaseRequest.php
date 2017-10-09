@@ -69,7 +69,7 @@ class BaseRequest
         Assert::boolean($verify, 'Verify must be a boolean');
 
         $this->normalizeUrl($baseUrl, $version);
-        $this->client = new \GuzzleHttp\Client(['verify' => $verify]);
+        $this->client = new \GuzzleHttp\Client(['verify' => $verify, 'cookies' => true]);
         $this->logger = new \Psr\Log\NullLogger;
     }
 
