@@ -172,6 +172,7 @@ class BaseRequest
                     throw $this->criticalError('SugarCRM Server Error', 500);
 
                 default:
+                    $this->criticalError('Request Error: ' . $e->getMessage());
                     throw $e;
             }
         }
