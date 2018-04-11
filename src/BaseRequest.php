@@ -326,7 +326,8 @@ class BaseRequest
         if ($this->loginAttempts > 5) {
             throw new \RuntimeException('Tried 5 times to login to sugar without success');
         }
-        $this->login();
         $this->loginAttempts++;
+        $this->login();
+        $this->loginAttempts = 0;
     }
 }
