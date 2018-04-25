@@ -225,6 +225,70 @@ class Module
 
         return $data;
     }
+    
+    
+    /**
+     * Set the related records list exactly as it is in $linkIds.
+     * By removing extra relationships from the CRM.
+     * And adding missing relationships into the CRM.
+     *
+     * @param   string  $moduleName Module name.
+     * @param   string  $recordId   Main record id.
+     * @param   string  $linkName   Relationship to use.
+     * @param   array   $linkIds    Ids of the records that we want to link to the main record.
+     *
+     * @return  array   Contains 'linked_records' & 'unlinked_records' which are both arrays.
+     */
+    public function updateRelatedLinks($moduleName, $recordId, $linkName, $linkIds = array())
+    {
+        Assert::false(strpos($moduleName, '/') || strpos($moduleName, '?'), "$moduleName is not a valid module");
+        Assert::false(strpos($record, '/') || strpos($record, '?'), "$record is not a valid id");
+        Assert::false(strpos($linkName, '/') || strpos($linkName, '?'), "$linkName is not a valid link name");
+
+        $url = implode('/', array($moduleName, $recordId, 'link', $linkName));
+
+        $contactIds = $this->getAll($url, true);
+        $linksToDelete = array_diff($contactIds, $linkIds);
+        $linksToPost = array_diff($linkIds, $contactIds);
+
+        foreach ($linksToDelete as $linkId) {
+            $this->sugarClient->delete($url . '/' . $linkId);
+        }
+
+        foreach ($linksToPost as $linkId) {
+            $this->sugarClient->post($url . '/' . $linkId, array());
+        }
+
+        return array(
+            'linked_records' => $linksToPost,
+            'unlinked_records' => $linksToDelete,
+        );
+    }
+
+    /**
+     * All retrieving of all the records from an endpoint or their ids.
+     *
+     * @param   string  $endpoint   Rest API endpoint to use.
+     * @param   string  $idsOnly    Whether or not we should retrieve the whole records or just their ids.
+     *
+     * @return All the records or their ids.
+     */
+    protected function getAll($endpoint, $idsOnly = true)
+    {
+        $nextOffset = 0;
+        $contacts = array();
+        do {
+            $fullEndpoint = $endpoint . '?offset=' . $nextOffset;
+            $page = $this->sugarClient->get($fullEndpoint);
+
+            $records = ($idsOnly) ? array_column($page['records'], 'id') : $page['records'];
+            $contacts = array_merge($contacts, $records);
+
+            $nextOffset = $page['next_offset'];
+        } while ($nextOffset > 0);
+
+        return $contacts;
+    }
 
     /**
      * @param \Exception $exception
