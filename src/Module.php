@@ -242,7 +242,7 @@ class Module
     public function updateRelatedLinks($moduleName, $recordId, $linkName, $linkIds = array())
     {
         Assert::false(strpos($moduleName, '/') || strpos($moduleName, '?'), "$moduleName is not a valid module");
-        Assert::false(strpos($record, '/') || strpos($record, '?'), "$record is not a valid id");
+        Assert::false(strpos($recordId, '/') || strpos($recordId, '?'), "$recordId is not a valid id");
         Assert::false(strpos($linkName, '/') || strpos($linkName, '?'), "$linkName is not a valid link name");
 
         $url = implode('/', array($moduleName, $recordId, 'link', $linkName));
