@@ -38,8 +38,8 @@ class BaseRequestTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException InetProcess\SugarAPI\Exception\SugarAPIException
-     * @expectedExceptionMessage Wrong SugarCRM URL
+     * @expectedException \GuzzleHttp\Exception\ConnectException
+     * @expectedExceptionMessage Could not resolve host
      * @group errors
      */
     public function testRequestWrongUrl()
@@ -49,8 +49,8 @@ class BaseRequestTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException InetProcess\SugarAPI\Exception\SugarAPIException
-     * @expectedExceptionMessage 404 Error - SugarCRM Endpoint not found
+     * @expectedException \InetProcess\SugarAPI\Exception\SugarAPIException
+     * @expectedExceptionMessage Could not find a route
      * @group errors
      */
     public function testRequest404()
@@ -158,6 +158,18 @@ class BaseRequestTest extends \PHPUnit_Framework_TestCase
         $this->assertArrayHasKey('records', $data);
 
         $this->assertNotEquals($oldToken, $base->getToken());
+    }
+
+    /**
+     * @expectedException RuntimeException
+     * @expectedExceptionMessage Tried 5 times to login to sugar without success
+     */
+    public function testWrongPassword()
+    {
+        $base = new BaseRequest(getenv('SUGARCRM_URL'));
+        $this->assertInstanceOf('InetProcess\SugarAPI\BaseRequest', $base->setUsername(getenv('SUGARCRM_USER')));
+        $this->assertInstanceOf('InetProcess\SugarAPI\BaseRequest', $base->setPassword('INVALID PASSWORD'));
+        $data = $base->request('/Contacts', [], [], 'get', 200);
     }
 
     /**

@@ -28,7 +28,7 @@ class SugarClientTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @expectedException InetProcess\SugarAPI\Exception\SugarAPIException
-     * @expectedExceptionMessage 404 Error - SugarCRM Endpoint not found
+     * @expectedExceptionMessage Could not find a route
      * @group errors
      */
     public function testGetNotFound()
@@ -47,7 +47,7 @@ class SugarClientTest extends \PHPUnit_Framework_TestCase
             $this->client->get('/Contacts' . $contact['id']);
             $this->assertTrue(false, 'Trying to get the contact did not throw an exception');
         } catch (SugarAPIException $e) {
-            $this->assertEquals('404 Error - SugarCRM Endpoint not found', $e->getMessage());
+            $this->assertContains('Could not find a route', $e->getMessage());
         }
     }
 

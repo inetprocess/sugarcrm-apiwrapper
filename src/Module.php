@@ -5,7 +5,7 @@
  * @package    sugarcrm-apiwrapper
  * @author     Emmanuel Dyan
  * @copyright  2005-2017 iNet Process
- * @version    1.0.3 
+ * @version    1.0.3
  * @link       http://www.inetprocess.com
  */
 
@@ -38,16 +38,12 @@ class Module
         Assert::false(strpos($module, '/') || strpos($module, '?'), "$module is not a valid module");
 
         $filters = !empty($filters) ? '?' . http_build_query(['filter' => $filters]) : '';
-        try {
-            $res = $this->sugarClient->get($module . '/count' . $filters, 200);
-            if (!array_key_exists('record_count', $res)) {
-                throw new SugarAPIException("Can't get a record_count key during a GET /{module}/count");
-            }
-
-            $total = (int) $res['record_count'];
-        } catch (\Exception $e) {
-            $this->handleSugarError($e, $module);
+        $res = $this->sugarClient->get($module . '/count' . $filters, 200);
+        if (!array_key_exists('record_count', $res)) {
+            throw new \RuntimeException("Can't get a record_count key during a GET /{module}/count");
         }
+
+        $total = (int) $res['record_count'];
 
         return $total;
     }
@@ -62,13 +58,7 @@ class Module
         Assert::false(strpos($module, '/') || strpos($module, '?'), "$module is not a valid module");
         Assert::notEmpty($data, "Data can't be empty");
 
-        try {
-            $data = $this->sugarClient->post($module, $data, 200);
-        } catch (\Exception $e) {
-            $this->handleSugarError($e, $module);
-        }
-
-        return $data;
+        return $this->sugarClient->post($module, $data, 200);
     }
 
     /**
@@ -82,13 +72,7 @@ class Module
         Assert::false(strpos($record, '/') || strpos($record, '?'), "$record is not a valid id");
         Assert::notEmpty($record, "Record ID can't be empty");
 
-        try {
-            $data = $this->sugarClient->delete($module . '/' . $record, 200);
-        } catch (\Exception $e) {
-            $this->handleSugarError($e, $module, $record);
-        }
-
-        return $data;
+        return $this->sugarClient->delete($module . '/' . $record, 200);
     }
 
     /**
@@ -106,11 +90,7 @@ class Module
 
         $url = $module . '/' . $record . '/file/' . $field;
 
-        try {
-            $fileContent = $this->sugarClient->get($url, 200, true);
-        } catch (\Exception $e) {
-            $this->handleSugarError($e, $module, $record);
-        }
+        $fileContent = $this->sugarClient->get($url, 200, true);
 
         if (is_null($targetFile)) {
             return $fileContent;
@@ -136,13 +116,7 @@ class Module
             $url = $module . '/' . $record;
         }
 
-        try {
-            $data = $this->sugarClient->get($url);
-        } catch (\Exception $e) {
-            $this->handleSugarError($e, $module, $record);
-        }
-
-        return $data;
+        return $this->sugarClient->get($url);
     }
 
     /**
@@ -166,13 +140,7 @@ class Module
             $body['order_by'] = $orderBy;
         }
 
-        try {
-            $data = $this->sugarClient->post($module . '/filter', $body, 200);
-        } catch (\Exception $e) {
-            $this->handleSugarError($e, $module);
-        }
-
-        return $data;
+        return $this->sugarClient->post($module . '/filter', $body, 200);
     }
 
     /**
@@ -188,13 +156,7 @@ class Module
         Assert::notEmpty($record, "Record ID can't be empty");
         Assert::notEmpty($data, "Data can't be empty");
 
-        try {
-            $data = $this->sugarClient->put("{$module}/{$record}", $data);
-        } catch (\Exception $e) {
-            $this->handleSugarError($e, $module, $record);
-        }
-
-        return $data;
+        return $this->sugarClient->put("{$module}/{$record}", $data);
     }
 
     /**
@@ -217,16 +179,10 @@ class Module
             'contents' => file_get_contents($filePath),
         ];
 
-        try {
-            $data = $this->sugarClient->post($url, $data, 200);
-        } catch (\Exception $e) {
-            $this->handleSugarError($e, $module);
-        }
-
-        return $data;
+        return $this->sugarClient->post($url, $data, 200);
     }
-    
-    
+
+
     /**
      * Set the related records list exactly as it is in $linkIds.
      * By removing extra relationships from the CRM.
@@ -288,24 +244,5 @@ class Module
         } while ($nextOffset > 0);
 
         return $contacts;
-    }
-
-    /**
-     * @param \Exception $exception
-     * @param string     $module
-     * @param string     $record
-     */
-    private function handleSugarError(\Exception $exception, $module, $record = null)
-    {
-        if ($exception->getCode() === 404) {
-            $module = ltrim($module, '/');
-            $record = ltrim($record, '/');
-
-            $idNotFound = empty($record) ? '' : " or id $record";
-
-            throw new Exception\SugarAPIException("Module $module" . $idNotFound . ' not found');
-        }
-
-        throw $exception;
     }
 }

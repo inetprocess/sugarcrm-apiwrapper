@@ -58,7 +58,7 @@ class SugarModuleTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException \InetProcess\SugarAPI\Exception\SugarAPIException
+     * @expectedException InetProcess\SugarAPI\Exception\SugarAPIException
      * @expectedExceptionMessageRegExp /.+422.+/
      * @group errors
      */
@@ -69,7 +69,7 @@ class SugarModuleTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @expectedException \InetProcess\SugarAPI\Exception\SugarAPIException
-     * @expectedExceptionMessage Module Wrong not found
+     * @expectedExceptionMessage Could not find a route
      * @group errors
      */
     public function testCountBadModule()
@@ -94,7 +94,7 @@ class SugarModuleTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @expectedException \InetProcess\SugarAPI\Exception\SugarAPIException
-     * @expectedExceptionMessage Module Wrong not found
+     * @expectedExceptionMessage Could not find a route
      * @group errors
      */
     public function testCreateBadModule()
@@ -149,7 +149,7 @@ class SugarModuleTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @expectedException \InetProcess\SugarAPI\Exception\SugarAPIException
-     * @expectedExceptionMessage Module Contacts or id test not found
+     * @expectedExceptionMessage Could not find record: test in module: Contacts
      * @group errors
      */
     public function testDeleteBadID()
@@ -169,7 +169,7 @@ class SugarModuleTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @expectedException \InetProcess\SugarAPI\Exception\SugarAPIException
-     * @expectedExceptionMessage Module Wrong not found
+     * @expectedExceptionMessage Could not find a route
      * @group errors
      */
     public function testRetrieveBadModule()
@@ -179,7 +179,7 @@ class SugarModuleTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @expectedException \InetProcess\SugarAPI\Exception\SugarAPIException
-     * @expectedExceptionMessage Module Wrong or id test not found
+     * @expectedExceptionMessage Could not find a route
      * @group errors
      */
     public function testRetrieveBadModuleWithID()
@@ -212,7 +212,7 @@ class SugarModuleTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException \InetProcess\SugarAPI\Exception\SugarAPIException
+     * @expectedException InetProcess\SugarAPI\Exception\SugarAPIException
      * @expectedExceptionMessageRegExp /.+422.+/
      * @group errors
      */
@@ -367,11 +367,21 @@ class SugarModuleTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * @expectedException \InetProcess\SugarAPI\Exception\SugarAPIException
+     * @expectedExceptionMessage Could not find a route
+     * @group errors
+     */
+    public function testSearchWrongModuleName()
+    {
+        $this->module->search('Toto', []);
+    }
+
+    /**
      * @expectedException InvalidArgumentException
      * @expectedExceptionMessage Toto/Toto is not a valid module
      * @group errors
      */
-    public function testSearchWrongModuleName()
+    public function testSearchWrongModuleParameter()
     {
         $this->module->search('Toto/Toto', []);
     }
@@ -388,7 +398,7 @@ class SugarModuleTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @expectedException \InetProcess\SugarAPI\Exception\SugarAPIException
-     * @expectedExceptionMessage Module Contacts or id test not found
+     * @expectedExceptionMessage Could not find record: test in module: Contacts
      * @group errors
      */
     public function testUpdateRecordDoesNotExist()
@@ -456,7 +466,7 @@ class SugarModuleTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @expectedException \InetProcess\SugarAPI\Exception\SugarAPIException
-     * @expectedExceptionMessage SugarCRM Server Error
+     * @expectedExceptionMessage Unexpected field type:
      * @group errors
      */
     public function testUploadToANoteBadFilename()

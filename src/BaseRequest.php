@@ -5,13 +5,14 @@
  * @package    sugarcrm-apiwrapper
  * @author     Emmanuel Dyan
  * @copyright  2005-2017 iNet Process
- * @version    1.0.3 
+ * @version    1.0.3
  * @link       http://www.inetprocess.com
  */
 
 namespace InetProcess\SugarAPI;
 
 use Webmozart\Assert\Assert;
+use GuzzleHttp\Psr7\Request;
 
 /**
  * A very basic class that does a request to a SugarCRM Url and maintain
@@ -125,7 +126,7 @@ class BaseRequest
         ], 'post', 200);
 
         if (empty($body['access_token'])) {
-            throw new Exception\SugarAPIException("No Token in the returned body");
+            throw new \RuntimeException("No Token in the returned body");
         }
 
         $this->token = $body['access_token'];
@@ -152,37 +153,30 @@ class BaseRequest
 
         $options = $this->buildOptions($headers, $data);
         try {
-            $response = $this->client->request(strtoupper($method), $fullUrl, $options);
-        } catch (\Exception $e) {
-            if (strpos($e->getMessage(), 'Could not resolve host') !== false) {
-                throw $this->criticalError('Wrong SugarCRM URL');
-            }
-
+            $request = new Request(strtoupper($method), $fullUrl);
+            $response = $this->client->send($request, $options);
+        } catch (\GuzzleHttp\Exception\BadResponseException $e) {
             switch ($e->getCode()) {
                 case 401:
                     $this->tryToLoginAgain();
                     $headers['OAuth-Token'] = $this->getToken(); // Refresh the token and try again
 
-                    return $this->request($url, $headers, $data, $method, $expect);
-
-                case 404:
-                    throw $this->criticalError('404 Error - SugarCRM Endpoint not found', 404);
-
-                case 500:
-                    throw $this->criticalError('SugarCRM Server Error', 500);
+                    // We managed to login, run the original query again
+                    return $this->request($url, $headers, $data, $method, $expect, $raw);
 
                 default:
-                    $this->criticalError('Request Error: ' . $e->getMessage());
-                    throw $e;
+                    throw $this->criticalError($e);
             }
+        } catch (\Exception $e) {
+            $this->logger->critical('SugarApi Error: '.$e->__toString());
+            throw $e;
         }
 
         if ($expect !== $response->getStatusCode()) {
             $msg = 'Bad status, got ' . $response->getStatusCode() . '. Instead of ' . $expect;
-            $msg .= 'Reponse: ' . $response->getReasonPhrase();
-
-            $this->logger->critical('SugarAPIWrapper: ' . $msg);
-            throw new Exception\SugarAPIWrongStatus($msg, 500);
+            $e = Exception\SugarAPIWrongStatus::create($request, $response, null, ['message' => $msg]);
+            $this->logger->critical($e->getMessage());
+            throw $e;
         }
 
         if ($raw === true) {
@@ -194,7 +188,8 @@ class BaseRequest
             $msg = "Can't read the output. Status: " . $response->getStatusCode() . PHP_EOL;
             $msg .= "Raw Body: " . $response->getBody();
 
-            throw $this->criticalError($msg);
+            $this->logger->critical($msg);
+            throw new \RuntimeException($msg);
         }
 
         return $data;
@@ -305,16 +300,17 @@ class BaseRequest
         return $options;
     }
 
+
     /**
      * Throw an Exception is something bad happens
      * @param string $msg
      * @param int    $code
      */
-    private function criticalError($msg, $code = 500)
+    private function criticalError($exception)
     {
-        $this->logger->critical('SugarAPIWrapper: ' . $msg);
-
-        return new Exception\SugarAPIException($msg, $code);
+        $sugarException = Exception\SugarAPIException::wrapGuzzleException($exception);
+        $this->logger->critical('SugarAPIWrapper: ' . $sugarException->getMessage());
+        return $sugarException;
     }
 
     /**
@@ -324,7 +320,9 @@ class BaseRequest
     {
         $this->logger->notice('SugarAPIWrapper: 401 Trying to log my user again as it has been disconnected');
         if ($this->loginAttempts > 5) {
-            throw new \RuntimeException('Tried 5 times to login to sugar without success');
+            throw new \RuntimeException(
+                'Tried 5 times to login to sugar without success. Please verify username and password'
+            );
         }
         $this->loginAttempts++;
         $this->login();
