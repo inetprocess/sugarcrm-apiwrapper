@@ -197,6 +197,7 @@ class Module
      */
     public function updateRelatedLinks($moduleName, $recordId, $linkName, $linkIds = array())
     {
+        $version = 'v10';
         Assert::false(strpos($moduleName, '/') || strpos($moduleName, '?'), "$moduleName is not a valid module");
         Assert::false(strpos($recordId, '/') || strpos($recordId, '?'), "$recordId is not a valid id");
         Assert::false(strpos($linkName, '/') || strpos($linkName, '?'), "$linkName is not a valid link name");
@@ -207,13 +208,26 @@ class Module
         $linksToDelete = array_diff($contactIds, $linkIds);
         $linksToPost = array_diff($linkIds, $contactIds);
 
+
+        $requests = [];
         foreach ($linksToDelete as $linkId) {
-            $this->sugarClient->delete($url . '/' . $linkId);
+            $requests[] = [
+                'method' => 'DELETE',
+                'url' => sprintf('/%s/%s/%s?fields=id', $version, $url, $linkId),
+            ];
         }
 
         foreach ($linksToPost as $linkId) {
-            $this->sugarClient->post($url . '/' . $linkId, array());
+            $requests[] = [
+                'method' => 'POST',
+                'url' => sprintf('/%s/%s/%s?fields=id', $version, $url, $linkId),
+            ];
         }
+
+        $res = $this->sugarClient->post('bulk', [
+            'requests' => $requests,
+        ]);
+        var_export($res);
 
         return array(
             'linked_records' => array_values($linksToPost),
