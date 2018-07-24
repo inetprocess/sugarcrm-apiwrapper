@@ -10,38 +10,55 @@ class SugarModuleTest extends \PHPUnit_Framework_TestCase
 {
     private $module;
 
+    private static $prefix = 'PhpUnit';
+
     public static function deleteAllContacts()
     {
-        // Search and delete all contacts with PHPUnit as First Name
-        $client = new SugarClient(getenv('SUGARCRM_URL'));
-        $contacts = $client->setUsername(getenv('SUGARCRM_USER'))
-            ->setPassword(getenv('SUGARCRM_PASSWORD'))
-            ->get("/Contacts?filter[][first_name]=PhpUnit");
-
-        if (empty($contacts['records'])) {
-            return;
-        }
-
-        foreach ($contacts['records'] as $contact) {
-            $client->delete('/Contacts/' . $contact['id']);
-        }
+        self::deleteAll('Contacts', [
+            [
+                '$or' => [
+                    [ 'first_name' => self::$prefix ],
+                    [ 'first_name' => 'Emmanuel' ],
+                ]
+            ]
+        ]);
     }
 
     public static function deleteAllNotes()
+    {
+        self::deleteAll('Notes', [
+            [
+                '$or' => [
+                    [ 'name' => self::$prefix ],
+                    [ 'name' => 'Test' ],
+                    [ 'name' => 'Name' ],
+                    [ 'name' => 'New Name' ],
+                ]
+            ]
+        ]);
+    }
+
+    public static function deleteAllCases()
+    {
+        self::deleteAll('Cases', [
+            [ 'name' => ['$starts' => self::$prefix ] ],
+        ]);
+    }
+
+    public static function deleteAll($module, $filter)
     {
         // Search and delete all contacts with PHPUnit as First Name
         $client = new SugarClient(getenv('SUGARCRM_URL'));
         $client = $client->setUsername(getenv('SUGARCRM_USER'))
                         ->setPassword(getenv('SUGARCRM_PASSWORD'));
 
-        $notes = $client->get("/Notes?filter[][name]=PhpUnit");
-        foreach ($notes['records'] as $contact) {
-            $client->delete('/Notes/' . $contact['id']);
-        }
-
-        $notes = $client->get("/Notes?filter[][name]=Test");
-        foreach ($notes['records'] as $contact) {
-            $client->delete('/Notes/' . $contact['id']);
+        $params = http_build_query([
+            'filter' => $filter,
+            'max_num' => 100,
+        ]);
+        $res = $client->get("/$module?" .$params);
+        foreach ($res['records'] as $record) {
+            $client->delete("/$module/" . $record['id']);
         }
     }
 
@@ -584,32 +601,32 @@ class SugarModuleTest extends \PHPUnit_Framework_TestCase
      */
     private function createContactAndTest($data)
     {
-        $contact = $this->module->create('Contacts', $data);
+        return $this->createBeanAndTest('Contacts', $data);
+    }
 
-        $this->assertNotEmpty($contact);
-        $this->assertInternalType('array', $contact);
-        $this->assertArrayHasKey('id', $contact);
-        $this->assertArrayHasKey('first_name', $contact);
-        $this->assertArrayHasKey('last_name', $contact);
-        $this->assertNotEmpty($contact['id']);
-        $this->assertEquals($data['first_name'], $contact['first_name']);
-        $this->assertEquals($data['last_name'], $contact['last_name']);
+    private function createBeanAndTest($module, $data)
+    {
+        $bean = $this->module->create($module, $data);
+        return $this->validateBean($bean, $data);
+    }
 
-        return $contact;
+    private function validateBean($bean, $data)
+    {
+        $this->assertNotEmpty($bean);
+        $this->assertInternalType('array', $bean);
+        $this->assertArrayHasKey('id', $bean);
+        $this->assertNotEmpty($bean['id']);
+        foreach ($data as $field => $value) {
+            $this->assertArrayHasKey($field, $bean);
+            $this->assertEquals($bean[$field], $value);
+        }
+        return $bean;
     }
 
     private function createNoteAndTest($data)
     {
         $note = $this->module->create('Notes', $data);
-
-        $this->assertNotEmpty($note);
-        $this->assertInternalType('array', $note);
-        $this->assertArrayHasKey('id', $note);
-        $this->assertArrayHasKey('name', $note);
-        $this->assertNotEmpty($note['id']);
-        $this->assertEquals($data['name'], $note['name']);
-
-        return $note;
+        return $this->validateBean($note, $data);
     }
 
 
@@ -635,16 +652,7 @@ class SugarModuleTest extends \PHPUnit_Framework_TestCase
     {
         $contact = $this->module->retrieve('Contacts', $record);
 
-        $this->assertNotEmpty($contact);
-        $this->assertInternalType('array', $contact);
-        $this->assertArrayHasKey('id', $contact);
-        $this->assertArrayHasKey('first_name', $contact);
-        $this->assertArrayHasKey('last_name', $contact);
-        $this->assertNotEmpty($contact['id']);
-        $this->assertEquals($data['first_name'], $contact['first_name']);
-        $this->assertEquals($data['last_name'], $contact['last_name']);
-
-        return $contact;
+        return $this->validateBean($contact, $data);
     }
 
     /**
@@ -656,14 +664,67 @@ class SugarModuleTest extends \PHPUnit_Framework_TestCase
     {
         $contact = $this->module->update('Contacts', $record, $data);
 
-        $this->assertNotEmpty($contact);
-        $this->assertInternalType('array', $contact);
-        $this->assertArrayHasKey('id', $contact);
-        $this->assertArrayHasKey('first_name', $contact);
-        $this->assertArrayHasKey('last_name', $contact);
-        $this->assertNotEmpty($contact['id']);
-        $this->assertEmpty($contact['last_name']);
+        return $this->validateBean($contact, $data);
+    }
 
-        return $contact;
+    /**
+     * @group related
+     */
+    public function testUpdateRelatedLinks()
+    {
+        $contact = $this->createBeanAndTest('Contacts', [
+            'first_name' => 'PHPUnit',
+            'last_name' => 'test_rel',
+        ]);
+        for ($i=0; $i<10; $i++) {
+            $case = $this->createBeanAndTest('Cases', [
+                'name' => self::$prefix." Test rel $i",
+            ]);
+            $cases[$case['id']] = $case;
+        }
+
+        $this->updateRelatedRecordsAndTest('Contacts', $contact['id'], 'cases', array_keys($cases), [
+            'linked_records' => array_keys($cases),
+            'unlinked_records' => []
+        ]);
+
+        $new_cases = array_slice($cases, 5, null, true);
+        for ($i=10; $i<15; $i++) {
+            $case = $this->createBeanAndTest('Cases', [
+                'name' => self::$prefix." Test rel $i",
+            ]);
+            $new_cases[$case['id']] = $case;
+        }
+
+        $expected = [
+            'linked_records' => array_diff(array_keys($new_cases), array_keys($cases)),
+            'unlinked_records' => array_diff(array_keys($cases), array_keys($new_cases)),
+        ];
+
+        $this->updateRelatedRecordsAndTest('Contacts', $contact['id'], 'cases', array_keys($new_cases), $expected);
+        self::deleteAllCases();
+    }
+
+    private function updateRelatedRecordsAndTest($module, $id, $rel, $related_ids, $expected)
+    {
+        $res = $this->module->updateRelatedLinks($module, $id, $rel, $related_ids);
+        $this->assertInternalType('array', $res);
+        $this->assertArrayHasKey('linked_records', $res);
+        $this->assertArrayHasKey('unlinked_records', $res);
+        $this->assertEqualsArrayValues($expected['linked_records'], $res['linked_records']);
+        $this->assertEqualsArrayValues($expected['unlinked_records'], $res['unlinked_records']);
+
+        $actual_related_ids = $this->module->getAll("$module/$id/link/$rel");
+        $this->assertInternalType('array', $actual_related_ids);
+        $this->assertEqualsArrayValues($related_ids, $actual_related_ids);
+    }
+
+    private function assertEqualsArrayValues($expected, $actual)
+    {
+        $expected_values = array_values($expected);
+        $actual_values = array_values($actual);
+        sort($expected_values);
+        sort($actual_values);
+        $this->assertEquals($expected_values, $actual_values);
     }
 }

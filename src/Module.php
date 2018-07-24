@@ -216,8 +216,8 @@ class Module
         }
 
         return array(
-            'linked_records' => $linksToPost,
-            'unlinked_records' => $linksToDelete,
+            'linked_records' => array_values($linksToPost),
+            'unlinked_records' => array_values($linksToDelete),
         );
     }
 
@@ -229,7 +229,7 @@ class Module
      *
      * @return All the records or their ids.
      */
-    protected function getAll($endpoint, $idsOnly = true)
+    public function getAll($endpoint, $idsOnly = true)
     {
         $nextOffset = 0;
         $contacts = array();
