@@ -727,4 +727,23 @@ class SugarModuleTest extends \PHPUnit_Framework_TestCase
         sort($actual_values);
         $this->assertEquals($expected_values, $actual_values);
     }
+
+    /**
+     * @group related
+     */
+    public function testUpdateRelatedLinksApiError()
+    {
+        $contact = $this->createBeanAndTest('Contacts', [
+            'first_name' => self::$prefix,
+            'last_name' => 'test_rel',
+        ]);
+        $res = $this->module->updateRelatedLinks('Contacts', $contact['id'], 'cases', ['foobar']);
+        $this->assertInternalType('array', $res);
+        $this->assertArrayHasKey('linked_records', $res);
+        $this->assertArrayHasKey('unlinked_records', $res);
+        $this->assertEmpty($res['linked_records']);
+        $this->assertEmpty($res['unlinked_records']);
+        $this->assertArrayHasKey('errors', $res);
+        $this->assertNotEmpty($res['errors']);
+    }
 }

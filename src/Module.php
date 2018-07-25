@@ -193,11 +193,12 @@ class Module
      * @param   string  $linkName   Relationship to use.
      * @param   array   $linkIds    Ids of the records that we want to link to the main record.
      *
-     * @return  array   Contains 'linked_records' & 'unlinked_records' which are both arrays.
+     * @return  array   Contains 'linked_records' and 'unlinked_records' which are the list of related
+     *                  record ids added or removed.
+     *                  Contains also an errors array with the list of failed requests
      */
     public function updateRelatedLinks($moduleName, $recordId, $linkName, $linkIds = array())
     {
-        $version = 'v10';
         Assert::false(strpos($moduleName, '/') || strpos($moduleName, '?'), "$moduleName is not a valid module");
         Assert::false(strpos($recordId, '/') || strpos($recordId, '?'), "$recordId is not a valid id");
         Assert::false(strpos($linkName, '/') || strpos($linkName, '?'), "$linkName is not a valid link name");
@@ -208,31 +209,35 @@ class Module
         $linksToDelete = array_diff($contactIds, $linkIds);
         $linksToPost = array_diff($linkIds, $contactIds);
 
+        $bulk = $this->sugarClient->newBulkRequest();
 
-        $requests = [];
         foreach ($linksToDelete as $linkId) {
-            $requests[] = [
-                'method' => 'DELETE',
-                'url' => sprintf('/%s/%s/%s?fields=id', $version, $url, $linkId),
-            ];
+            $bulk->delete($url . '/' . $linkId.'?fields=id');
         }
 
         foreach ($linksToPost as $linkId) {
-            $requests[] = [
-                'method' => 'POST',
-                'url' => sprintf('/%s/%s/%s?fields=id', $version, $url, $linkId),
-            ];
+            $bulk->post($url . '/' . $linkId.'?fields=id', array());
         }
 
-        $res = $this->sugarClient->post('bulk', [
-            'requests' => $requests,
-        ]);
-        var_export($res);
-
-        return array(
-            'linked_records' => array_values($linksToPost),
-            'unlinked_records' => array_values($linksToDelete),
-        );
+        $responses = $bulk->send();
+        $return = [
+            'linked_records' => [],
+            'unlinked_records' => [],
+            'errors' => [],
+        ];
+        foreach ($responses as $response) {
+            if ($response['status'] == 200) {
+                $relatedId = $response['contents']['related_record']['id'];
+                if (in_array($relatedId, $linksToPost)) {
+                    $return['linked_records'][] = $relatedId;
+                } else {
+                    $return['unlinked_records'][] = $relatedId;
+                }
+            } else {
+                $return['errors'][] = $response;
+            }
+        }
+        return $return;
     }
 
     /**
@@ -249,6 +254,9 @@ class Module
         $contacts = array();
         do {
             $fullEndpoint = $endpoint . '?offset=' . $nextOffset;
+            if ($idsOnly) {
+                $fullEndpoint .= '&fields=id';
+            }
             $page = $this->sugarClient->get($fullEndpoint);
 
             $records = ($idsOnly) ? array_column($page['records'], 'id') : $page['records'];

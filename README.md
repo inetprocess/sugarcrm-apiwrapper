@@ -97,6 +97,22 @@ echo $contact['last_name']; // Should display: "D."
 $contact = $client->delete('/Contacts/' . $contact['id']);
 ```
 
+### Use a Bulk request to send multiple requests in a single HTTP call
+#### Get a new BulkRequest object
+```php
+<?php
+$bulk = $client->newBulkRequest();
+```
+
+#### Send multiple requests
+You can use the same functions as the SugarClient class to prepare your requests
+```php
+<?php
+$bulk->post('/Contacts', $data);
+$bulk->delete('/Contacts/'.$contact['id']);
+...
+$responses = $bulk->send();
+```
 
 ## Module
 Wrappers for specific modules actions. It does an autologin and sends the right headers with the tokens automatically.
@@ -220,6 +236,28 @@ Parameters:
 
 $noteId = '123456-abcdef-78910';
 $module->delete('Notes', $noteId);
+```
+
+### Set all related ids to a record
+Parameters:
+* `$module`   : Module Name such as _Contacts_
+* `$record`   : ID of the record
+* `$linkName` : Relationship name
+* `$relatedIds`: Array of ids from the related module.
+  This array is the full set of related ids, it will remove existing related links if they are not sent here.
+
+```php
+<?php
+$contactId = '123456-abcdef-78910';
+$casesIds = ['756335-abcdef-12340', '5475626-fedba-545761'];
+$res = $module->updateRelatedLinks('Contacts', $contactId, 'cases', $casesIds);
+var_export($res);
+/*  [
+        'linked_records' => ['756335-abcdef-12340', '5475626-fedba-545761'],
+        'unlinked_records' => ['234782-gfbeaf-7672'],
+        'errors' => [],
+    ]
+*/
 ```
 
 ### Download a file

@@ -13,52 +13,14 @@ namespace InetProcess\SugarAPI;
 
 class SugarClient extends BaseRequest
 {
-    /**
-     * @param  string $url
-     * @param  int $expectedStatus
-     * @return array
-     */
-    public function delete($url, $expectedStatus = 200)
-    {
-        return $this->clientRequest('delete', $url, $expectedStatus);
-    }
+    use ClientTrait;
 
     /**
-     * @param  string $url
-     * @param  int $expectedStatus
-     * @return array
+     *
      */
-    public function get($url, $expectedStatus = 200, $rawBody = false)
+    public function newBulkRequest()
     {
-        return $this->clientRequest('get', $url, $expectedStatus, [], [], $rawBody);
-    }
-
-    /**
-     * @param  string $url
-     * @param  array             $data
-     * @param  int $expectedStatus
-     * @return array
-     */
-    public function post($url, array $data, $expectedStatus = 200)
-    {
-        return $this->clientRequest('post', $url, $expectedStatus, $data);
-    }
-
-    /**
-     * @param  string $url
-     * @param  array             $data
-     * @param  int $expectedStatus
-     * @return array
-     */
-    public function put($url, array $data, $expectedStatus = 200)
-    {
-        foreach ($data as $field => $value) {
-            if (is_null($value)) {
-                $data[$field] = '';
-            }
-        }
-
-        return $this->clientRequest('put', $url, $expectedStatus, $data);
+        return new BulkRequest($this);
     }
 
     /**

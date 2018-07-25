@@ -55,6 +55,11 @@ class BaseRequest
     protected $username;
 
     /**
+     * @var string
+     */
+    protected $version;
+
+    /**
      * @var int
      */
     private $loginAttempts = 0;
@@ -69,6 +74,7 @@ class BaseRequest
     {
         Assert::boolean($verify, 'Verify must be a boolean');
 
+        $this->version = $version;
         $this->normalizeUrl($baseUrl, $version);
         $this->client = new \GuzzleHttp\Client(['verify' => $verify, 'cookies' => true]);
         $this->logger = new \Psr\Log\NullLogger;
@@ -104,6 +110,14 @@ class BaseRequest
     public function getTokenExpiration()
     {
         return $this->tokenExpiration;
+    }
+
+    /**
+     * @return string
+     */
+    public function getVersion()
+    {
+        return $this->version;
     }
 
     /**
