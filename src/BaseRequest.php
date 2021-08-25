@@ -68,15 +68,15 @@ class BaseRequest
      * Initiate the Guzzle client
      * @param string $baseUrl  The base URL of SugarCRM
      * @param string $version  SugarCRM Api Version
-     * @param bool   $verify
+     * @param array   $options Options to be passed to Guzzle
      */
-    public function __construct($baseUrl, $version = 'v10', $verify = false)
+    public function __construct($baseUrl, $version = 'v10', $options = ['verify' => false, 'cookies' => true])
     {
-        Assert::boolean($verify, 'Verify must be a boolean');
+        Assert::array($options, 'Options must be an array');
 
         $this->version = $version;
         $this->normalizeUrl($baseUrl, $version);
-        $this->client = new \GuzzleHttp\Client(['verify' => $verify, 'cookies' => true]);
+        $this->client = new \GuzzleHttp\Client($options);
         $this->logger = new \Psr\Log\NullLogger;
     }
 
