@@ -74,11 +74,11 @@ class BaseRequest
     public function __construct($baseUrl, $version = 'v10', $verify = false, $options = [])
     {
         Assert::boolean($verify, 'Verify must be a boolean');
-        Assert::array($options, 'Options must be an array');
+        Assert::isArray($options, 'Options must be an array');
 
         $this->version = $version;
         $this->normalizeUrl($baseUrl, $version);
-        $this->client = new \GuzzleHttp\Client(empty($options) ? ['verify' => $verify, 'cookies' => true] : $options);
+        $this->client = new \GuzzleHttp\Client(array_merge(['verify' => $verify, 'cookies' => true], $options));
         $this->logger = new \Psr\Log\NullLogger;
     }
 
